@@ -54,7 +54,7 @@ PlasmoidItem {
     }
 
     Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
-    preferredRepresentation: inPanel ? Plasmoid.compactRepresentation : Plasmoid.fullRepresentation
+    preferredRepresentation: inPanel ? compactRepresentation : fullRepresentation
 
     // The data source to run the python helper script
     Plasma5Support.DataSource {

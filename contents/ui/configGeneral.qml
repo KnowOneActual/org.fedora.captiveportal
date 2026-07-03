@@ -42,11 +42,10 @@ Item {
 
         SpinBox {
             id: checkIntervalSpinBox
-            Kirigami.FormData.label: i18n("Polling Interval:")
+            Kirigami.FormData.label: i18n("Polling Interval (secs):")
             from: 10
             to: 300
             stepSize: 5
-            suffix: i18n(" seconds")
         }
     }
 }
