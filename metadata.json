@@ -2,7 +2,7 @@
     "KPlugin": {
         "Name": "Captive Portal Rescue",
         "Description": "Glanceable tray widget to detect, bypass, and restore DNS configurations on public Wi-Fi captive portals.",
-        "Icon": "network-security",
+        "Icon": "network-wireless-hotspot",
         "Id": "org.fedora.captiveportal",
         "Version": "0.1.0",
         "Category": "Network",

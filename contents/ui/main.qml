@@ -48,9 +48,10 @@ PlasmoidItem {
 
     Plasmoid.title: "Captive Portal Rescue"
     Plasmoid.icon: {
-        if (root.status === "ONLINE") return "network-security-activated";
-        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-security-waning";
-        return "network-security-deactivated";
+        if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
+        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
+        if (root.status === "DISCONNECTED") return "network-disconnect";
+        return "network-wireless-disconnected";
     }
 
     Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
@@ -167,9 +168,10 @@ PlasmoidItem {
 
                 Kirigami.Icon {
                     source: {
-                        if (root.status === "ONLINE") return "network-security-activated";
-                        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-security-waning";
-                        return "network-security-deactivated";
+                        if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
+                        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
+                        if (root.status === "DISCONNECTED") return "network-disconnect";
+                        return "network-wireless-disconnected";
                     }
                     implicitWidth: Kirigami.Units.iconSizes.smallMedium
                     implicitHeight: Kirigami.Units.iconSizes.smallMedium
@@ -384,9 +386,10 @@ PlasmoidItem {
             width: Math.min(parent.width, parent.height) - Kirigami.Units.smallSpacing
             height: width
             source: {
-                if (root.status === "ONLINE") return "network-security-activated";
-                if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-security-waning";
-                return "network-security-deactivated";
+                if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
+                if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
+                if (root.status === "DISCONNECTED") return "network-disconnect";
+                return "network-wireless-disconnected";
             }
             color: {
                 if (root.status === "ONLINE") return "#67C23A";
