@@ -1,0 +1,23 @@
+{
+    "KPlugin": {
+        "Name": "Captive Portal Rescue",
+        "Description": "Glanceable tray widget to detect, bypass, and restore DNS configurations on public Wi-Fi captive portals.",
+        "Icon": "network-security",
+        "Id": "org.fedora.captiveportal",
+        "Version": "0.1.0",
+        "Category": "Network",
+        "License": "MIT",
+        "Authors": [
+            {
+                "Name": "Beau Bremer"
+            }
+        ],
+        "EnabledByDefault": true,
+        "ServiceTypes": [
+            "Plasma/Applet"
+        ]
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml"
+}
