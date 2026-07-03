@@ -11,6 +11,8 @@ Item {
     property alias cfg_showBackground: showBackgroundCheckbox.checked
     property alias cfg_debugMode: debugModeCheckbox.checked
     property alias cfg_checkInterval: checkIntervalSpinBox.value
+    property alias cfg_showTitle: showTitleCheckbox.checked
+    property alias cfg_showDetails: showDetailsCheckbox.checked
 
     Kirigami.FormLayout {
         anchors.left: parent.left
@@ -20,6 +22,16 @@ Item {
             id: showBackgroundCheckbox
             Kirigami.FormData.label: i18n("Appearance:")
             text: i18n("Show background card")
+        }
+
+        CheckBox {
+            id: showTitleCheckbox
+            text: i18n("Show widget title")
+        }
+
+        CheckBox {
+            id: showDetailsCheckbox
+            text: i18n("Show network names & explanations")
         }
 
         CheckBox {

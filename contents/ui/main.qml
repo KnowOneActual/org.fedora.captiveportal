@@ -30,6 +30,14 @@ PlasmoidItem {
     // Configuration shortcut bindings
     readonly property bool debugMode: plasmoid.configuration.debugMode
     readonly property int checkInterval: plasmoid.configuration.checkInterval
+    readonly property bool showTitle: plasmoid.configuration.showTitle
+    readonly property bool showDetails: plasmoid.configuration.showDetails
+
+    // Panel detection
+    readonly property bool inPanel: (Plasmoid.location === PlasmaCore.Types.TopEdge
+        || Plasmoid.location === PlasmaCore.Types.RightEdge
+        || Plasmoid.location === PlasmaCore.Types.BottomEdge
+        || Plasmoid.location === PlasmaCore.Types.LeftEdge)
 
     // Styling properties
     readonly property color textColor: Kirigami.Theme.textColor
@@ -46,7 +54,7 @@ PlasmoidItem {
     }
 
     Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
-    preferredRepresentation: fullRepresentation
+    preferredRepresentation: inPanel ? Plasmoid.compactRepresentation : Plasmoid.fullRepresentation
 
     // The data source to run the python helper script
     Plasma5Support.DataSource {
@@ -153,6 +161,7 @@ PlasmoidItem {
 
             // Header Section
             RowLayout {
+                visible: root.showTitle
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
@@ -222,6 +231,7 @@ PlasmoidItem {
 
             // Divider
             Rectangle {
+                visible: root.showTitle
                 Layout.fillWidth: true
                 height: 1
                 color: root.textColor
@@ -273,6 +283,7 @@ PlasmoidItem {
 
             // Connection Info Text
             PlasmaComponents.Label {
+                visible: root.showDetails
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
@@ -302,7 +313,7 @@ PlasmoidItem {
             // Warning panel for VPNs
             RowLayout {
                 Layout.fillWidth: true
-                visible: root.vpnActive
+                visible: root.vpnActive && root.showDetails
                 spacing: Kirigami.Units.smallSpacing
                 Layout.topMargin: Kirigami.Units.smallSpacing
 
@@ -357,6 +368,31 @@ PlasmoidItem {
                     enabled: !root.isRefreshing
                     onClicked: root.restore()
                 }
+            }
+        }
+    }
+
+    compactRepresentation: MouseArea {
+        id: compactMouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.expanded = !root.expanded
+
+        Kirigami.Icon {
+            anchors.centerIn: parent
+            width: Math.min(parent.width, parent.height) - Kirigami.Units.smallSpacing
+            height: width
+            source: {
+                if (root.status === "ONLINE") return "network-security-activated";
+                if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-security-waning";
+                return "network-security-deactivated";
+            }
+            color: {
+                if (root.status === "ONLINE") return "#67C23A";
+                if (root.status === "PORTAL_DETECTED") return "#E6A23C";
+                if (root.status === "PORTAL_AWAITING_LOGIN") return "#409EFF";
+                return root.mutedTextColor;
             }
         }
     }

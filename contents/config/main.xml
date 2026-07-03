@@ -11,5 +11,11 @@
 		<entry name="checkInterval" type="int">
 			<default>30</default>
 		</entry>
+		<entry name="showTitle" type="bool">
+			<default>true</default>
+		</entry>
+		<entry name="showDetails" type="bool">
+			<default>true</default>
+		</entry>
 	</group>
 </kcfg>
