@@ -116,5 +116,4 @@ This widget runs locally and respects your privacy:
 
 ## License
 
-[MIT License](License). Free to modify and share!
-
+[MIT License](LICENSE). Free to modify and share!
