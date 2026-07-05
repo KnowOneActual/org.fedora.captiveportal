@@ -1,7 +1,14 @@
 <!-- textlint-disable slopless/flesch-kincaid -->
 # Captive portal rescue widget for KDE Plasma 6
 
-A native system tray widget for KDE Plasma 6 on Fedora. It helps you log in to public Wi-Fi captive portals (like hotels, airports, and cafes). It bypasses custom DNS settings and VPNs to show the login page. Then it restores your secure settings after you connect. It wraps the [captive-portal-rescue](file:///home/user/github/captive-portal-rescue) script in a clean graphical layout.
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/KnowOneActual/org.fedora.captiveportal/releases)
+[![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6%2B-blue?logo=kde&logoColor=white)](https://kde.org)
+[![Fedora Tested](https://img.shields.io/badge/Fedora-tested-blue?logo=fedora&logoColor=white)](https://fedoraproject.org)
+[![Python 3](https://img.shields.io/badge/Python-3-blue?logo=python&logoColor=white)](https://python.org)
+[![NetworkManager](https://img.shields.io/badge/NetworkManager-integrated-darkgreen?logo=linux&logoColor=white)](https://networkmanager.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A native system tray widget for KDE Plasma 6 on Fedora. It helps you log in to public Wi-Fi captive portals (like hotels, airports, and cafes). It bypasses custom DNS settings and VPNs to show the login page. Then it restores your secure settings after you connect. It wraps the [captive-portal-rescue](https://github.com/KnowOneActual/captive-portal-rescue) script in a clean graphical layout.
 
 ---
 
@@ -29,7 +36,7 @@ This widget gives you a simple tool to:
 
 ## 💡 Why this exists
 
-I developed this tool to make my own travels easier. Connecting to various public networks with custom DNS and active VPNs is a constant hassle. I wanted a fast, native desktop tool to handle it. Building this widget was also a great way to learn KDE Plasma 6 development and wrap my original CLI tool, [captive-portal-rescue](https://github.com/KnowOneActual/captive-portal-rescue).
+I developed this tool to make my own travels easier. Connecting to various public and private networks with custom DNS and active VPNs is a bit of hassle. I wanted a fast, native desktop tool to handle it. Building this widget was also a great way to learn KDE Plasma 6 development and wrap my original CLI tool, [captive-portal-rescue](https://github.com/KnowOneActual/captive-portal-rescue).
 
 ---
 
@@ -109,5 +116,5 @@ This widget runs locally and respects your privacy:
 
 ## License
 
-MIT License. Free to modify and share!
-<!-- textlint-enable slopless/flesch-kincaid -->
+[MIT License](License). Free to modify and share!
+
