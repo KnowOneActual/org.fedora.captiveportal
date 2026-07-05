@@ -1,41 +1,59 @@
-# Captive Portal Rescue Widget for KDE Plasma 6
+<!-- textlint-disable slopless/flesch-kincaid -->
+# Captive portal rescue widget for KDE Plasma 6
 
-A native, glanceable system tray widget for KDE Plasma 6 (tested on Fedora) to detect, bypass, and restore DNS configurations on public Wi-Fi captive portals (such as hotels, airports, and cafes). It wraps the [captive-portal-rescue](file:///home/user/github/captive-portal-rescue) tool in a clean graphical layout.
+A native system tray widget for KDE Plasma 6 on Fedora. It helps you log in to public Wi-Fi captive portals (like hotels, airports, and cafes). It bypasses custom DNS settings and VPNs to show the login page. Then it restores your secure settings after you connect. It wraps the [captive-portal-rescue](file:///home/user/github/captive-portal-rescue) script in a clean graphical layout.
 
 ---
 
-## 🛠️ The Problem
+## ⚡ Quick summary (Why, what, how)
 
-Many developers configure custom static DNS servers (e.g., Cloudflare `1.1.1.1` or Google `8.8.8.8`), enable DNS-over-HTTPS (DoH), or run VPN mesh networks like Tailscale or WireGuard. 
+* **Why:** Custom DNS (like `1.1.1.1`) and active VPNs block public Wi-Fi login pages. Connecting at the library or a cafe usually requires manually disabling these secure settings.
+* **What:** A native system tray widget that detects portal redirects, temporarily bypasses custom DNS, triggers the login page, and restores secure settings once you are online.
+* **How:** It uses a local Python script to modify active NetworkManager connections, open the portal page, and restore the original profile settings automatically.
 
-Public Wi-Fi captive portals rely on **DNS hijacking** to redirect your initial browser requests to their login/landing page. Custom DNS and VPN configs block this redirection, preventing you from reaching the login page and getting online.
+---
 
-This widget provides a simple desktop UI to:
-1. Detect when a captive portal is redirecting or hijacking traffic.
-2. Temporarily configure your active NetworkManager connection to ignore custom DNS and bind to the gateway's DNS.
-3. Automatically launch your default browser to trigger the portal login page.
-4. Prompt you to restore your secure, custom DNS/VPN settings with a single click once you are authenticated and online.
+## 🛠️ The problem
+
+Many developers use custom DNS (like Cloudflare `1.1.1.1` or Google `8.8.8.8`), enable DNS-over-HTTPS (DoH), or run VPNs (like Tailscale or WireGuard).
+
+Public Wi-Fi captive portals hijack DNS to redirect your browser to their login page. Custom DNS and VPN settings block this redirect. This stops you from reaching the login page or getting online.
+
+This widget gives you a simple tool to:
+1. Detect when a portal blocks your connection.
+2. Temporarily bypass custom DNS to use the portal's DNS.
+3. Open your browser to trigger the login page.
+4. Restore your secure DNS and VPN settings in one click after you log in.
+
+---
+
+## 💡 Why this exists
+
+I developed this tool to make my own travels easier. Connecting to various public networks with custom DNS and active VPNs is a constant hassle. I wanted a fast, native desktop tool to handle it. Building this widget was also a great way to learn KDE Plasma 6 development and wrap my original CLI tool, [captive-portal-rescue](https://github.com/KnowOneActual/captive-portal-rescue).
 
 ---
 
 ## ✨ Features
 
-* 📊 **Live Status Monitoring:** Periodically checks your active Wi-Fi profile, custom DNS settings, active VPN interfaces, and internet connectivity.
-* 🛡️ **Bypass Custom DNS (Rescue):** Overrides custom DNS settings to bind directly to the portal's internal gateway IP, allowing the browser to load the login page.
-* 🚀 **Trigger Portal Page:** Once bypassed, a button appears to automatically trigger browser redirection using http://neverssl.com.
-* 🔄 **Single-Click Restore:** Shows a prominent notification when running on bypassed settings, letting you revert to your secure configurations with one click.
-* ⚠️ **VPN Detection:** Flags active VPN interfaces (Tailscale, WireGuard, openvpn, etc.) that could conflict with the gateway redirect.
+* 📊 **Live monitoring:** Checks your active Wi-Fi, custom DNS, active VPNs, and network state.
+* 🤖 **Auto-rescue & restore:** Bypasses custom DNS when a portal is found. Restores settings once you are online.
+* 🔔 **System notifications:** Native desktop alerts tell you when a portal is blocked, rescued, or restored.
+* 🛡️ **DNS bypass:** Ignores custom DNS and uses the local gateway IP to load the login page.
+* 🚀 **Browser trigger:** Opens the portal login page in your browser.
+* 🔄 **Easy restore:** Reverts to your secure DNS and VPN settings in one click.
+* 🔋 **Battery-friendly:** Polls less often when online to save battery. It uses local checks to reduce network traffic.
+* ⚠️ **VPN alerts:** Warns you if active VPNs block the portal.
 
 ---
 
-## 🚀 Installation & Setup
+## 🚀 Installation & setup
 
-### Method 1: Symbolic Link for Development (Recommended)
+### Method 1: Symbolic link for development (recommended)
 
 To install the widget from source:
 
 ```bash
-# 1. Link the repository into your local Plasma widgets directory
+# 1. Link the repo into your local Plasma widgets folder
 ln -s ~/github/org.fedora.captiveportal ~/.local/share/plasma/plasmoids/org.fedora.captiveportal
 
 # 2. Rebuild the KDE configuration cache
@@ -45,7 +63,7 @@ kbuildsycoca6
 systemctl --user restart plasma-plasmashell
 ```
 
-### Method 2: Installing a `.plasmoid` Package
+### Method 2: Install a `.plasmoid` package
 
 ```bash
 # To install for the first time
@@ -54,7 +72,7 @@ kpackagetool6 --type Plasma/Applet --install org.fedora.captiveportal.plasmoid
 
 ---
 
-## 🎨 How to Add the Widget
+## 🎨 How to add the widget
 
 1. **Right-click** on your desktop wallpaper or panel.
 2. Click **Add Widgets...** (or press `Meta+Alt+A`).
@@ -63,9 +81,9 @@ kpackagetool6 --type Plasma/Applet --install org.fedora.captiveportal.plasmoid
 
 ---
 
-## 💻 CLI Usage
+## 💻 CLI usage
 
-The backend helper script can also be run directly in the terminal to inspect connection details:
+You can also run the helper script in the terminal to see details:
 
 ```bash
 # Get connection status in JSON format
@@ -80,15 +98,16 @@ python3 contents/ui/backend.py --restore
 
 ---
 
-## 🔒 Security & Privacy
+## 🔒 Security & privacy
 
-This widget operates locally and respects your privacy:
-* **Local-First Execution:** Network profiles and DNS configurations are edited using local NetworkManager APIs.
-* **No Telemetry:** No user data, location details, or configuration stats are logged or transmitted.
-* **Safe Overrides:** DNS overrides are temporary and can be rolled back at any time.
+This widget runs locally and respects your privacy:
+* **Local execution:** It edits network profiles and DNS settings with local NetworkManager tools.
+* **No telemetry:** It does not collect or send any user data.
+* **Safe overrides:** DNS bypasses are temporary and easy to undo.
 
 ---
 
 ## License
 
 MIT License. Free to modify and share!
+<!-- textlint-enable slopless/flesch-kincaid -->

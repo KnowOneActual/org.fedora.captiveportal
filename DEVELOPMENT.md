@@ -82,7 +82,7 @@ To build the final `.plasmoid` package for distribution:
 1. Ensure you are in the root directory of the project.
 2. Run the `zip` command containing only the necessary runtime files (excluding `.git`, docs, and backup packages):
    ```bash
-   zip -r org.fedora.captiveportal.plasmoid metadata.json contents/ preview.webp
+   zip -r org.fedora.captiveportal.plasmoid metadata.json contents/
    ```
 3. Test installing the newly generated package:
    ```bash

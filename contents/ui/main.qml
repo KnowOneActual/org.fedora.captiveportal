@@ -27,11 +27,18 @@ PlasmoidItem {
     property string redirectUrl: ""
     property bool isRefreshing: false
 
+    onStatusChanged: refreshTimer.updateInterval()
+    onRescueStatusChanged: refreshTimer.updateInterval()
+
     // Configuration shortcut bindings
     readonly property bool debugMode: plasmoid.configuration.debugMode
     readonly property int checkInterval: plasmoid.configuration.checkInterval
     readonly property bool showTitle: plasmoid.configuration.showTitle
     readonly property bool showDetails: plasmoid.configuration.showDetails
+    readonly property bool autoRescue: plasmoid.configuration.autoRescue
+    readonly property bool autoRestore: plasmoid.configuration.autoRestore
+
+    property string lastAction: ""
 
     // Panel detection
     readonly property bool inPanel: (Plasmoid.location === PlasmaCore.Types.TopEdge
@@ -69,17 +76,67 @@ PlasmoidItem {
             if (stdout) {
                 try {
                     var parsed = JSON.parse(stdout.trim());
-                    root.status = parsed.status || "DISCONNECTED";
+                    var newStatus = parsed.status || "DISCONNECTED";
+                    var newRescueStatus = parsed.rescue_status || "NORMAL";
+                    var newActiveWifiUuid = parsed.active_wifi_uuid || "None";
+
+                    // Clear lastAction if we reached the target state
+                    if (root.lastAction === "rescue" && newRescueStatus === "RESCUED") {
+                        root.lastAction = "";
+                    } else if (root.lastAction === "restore" && newRescueStatus === "NORMAL" && newStatus === "ONLINE") {
+                        root.lastAction = "";
+                    }
+
+                    // Check for transitions BEFORE updating the properties
+                    var statusChanged = (root.status !== newStatus);
+                    var rescueStatusChanged = (root.rescueStatus !== newRescueStatus);
+                    var wifiChanged = (root.activeWifiUuid !== newActiveWifiUuid);
+
+                    // Update properties
+                    root.status = newStatus;
                     root.activeWifiName = parsed.active_wifi_name || "None";
-                    root.activeWifiUuid = parsed.active_wifi_uuid || "None";
+                    root.activeWifiUuid = newActiveWifiUuid;
                     root.deviceInterface = parsed.device_interface || "None";
                     root.ipv4IgnoreAutoDns = parsed.ipv4_ignore_auto_dns || "no";
                     root.ipv4Dns = parsed.ipv4_dns || "";
-                    root.rescueStatus = parsed.rescue_status || "NORMAL";
+                    root.rescueStatus = newRescueStatus;
                     root.vpnActive = parsed.vpn_active || false;
                     root.vpnInterfaces = parsed.vpn_interfaces || "None";
                     root.connectivity = parsed.connectivity || "OFFLINE";
                     root.redirectUrl = parsed.redirect_url || "";
+
+                    // Automation logic
+                    if (root.lastAction === "") {
+                        if (root.autoRescue && root.rescueStatus === "NORMAL" && root.activeWifiUuid !== "None" &&
+                            (root.status === "PORTAL_DETECTED" || root.status === "OFFLINE")) {
+
+                            // Only trigger if we just connected or the status degraded to blocked/offline
+                            if (statusChanged || wifiChanged || rescueStatusChanged) {
+                                root.showNotification("Captive portal detected. Automatically bypassing custom DNS...", "Captive Portal Rescue", "network-wireless-hotspot");
+                                root.rescue();
+                            }
+                        } else if (root.autoRestore && root.rescueStatus === "RESCUED" && root.status === "ONLINE") {
+                            // Only trigger if we transitioned to online
+                            if (statusChanged || rescueStatusChanged) {
+                                root.showNotification("Internet connection detected. Automatically restoring secure DNS settings...", "Captive Portal Rescue", "network-vpn");
+                                root.restore();
+                            }
+                        }
+                    }
+
+                    // Passive Notifications for manual actions (or status transitions)
+                    if (statusChanged && !root.isRefreshing) {
+                        if (root.status === "PORTAL_DETECTED") {
+                            root.showNotification("Your connection to " + root.activeWifiName + " is blocked by a captive portal.", "Captive Portal Detected", "network-wireless-hotspot");
+                        }
+                    }
+                    if (rescueStatusChanged && !root.isRefreshing) {
+                        if (root.rescueStatus === "RESCUED") {
+                            root.showNotification("Connection rescued. Secure DNS temporarily bypassed. Please open the login page.", "Rescue Active", "network-wired");
+                        } else if (root.rescueStatus === "NORMAL" && root.lastAction === "") {
+                            root.showNotification("Secure DNS and VPN configurations restored.", "DNS Restored", "network-vpn");
+                        }
+                    }
                 } catch (e) {
                     console.log("JSON Parse error: " + e);
                 }
@@ -123,12 +180,14 @@ PlasmoidItem {
 
     function rescue() {
         if (root.isRefreshing) return;
+        root.lastAction = "rescue";
         root.isRefreshing = true;
         executable.runRescue();
     }
 
     function restore() {
         if (root.isRefreshing) return;
+        root.lastAction = "restore";
         root.isRefreshing = true;
         executable.runRestore();
     }
@@ -136,6 +195,14 @@ PlasmoidItem {
     function openLoginPage() {
         var url = root.redirectUrl ? root.redirectUrl : "http://neverssl.com";
         Qt.openUrlExternally(url);
+    }
+
+    function showNotification(message, title, icon) {
+        if (plasmoid && typeof plasmoid.showPassiveNotification === "function") {
+            plasmoid.showPassiveNotification(message, title || "Captive Portal Rescue", icon || "network-wired");
+        } else {
+            console.log("Notification: [" + (title || "Captive Portal Rescue") + "] " + message);
+        }
     }
 
     // Auto-refresh timer
@@ -146,6 +213,22 @@ PlasmoidItem {
         repeat: true
         triggeredOnStart: true
         onTriggered: root.refresh()
+
+        function updateInterval() {
+            var newInterval;
+            // If online and not rescued, poll very slowly (e.g. 10x checkInterval, min 5 mins) to save resources
+            if (root.status === "ONLINE" && root.rescueStatus !== "RESCUED") {
+                newInterval = Math.max(root.checkInterval * 10, 300) * 1000;
+            } else {
+                newInterval = root.checkInterval * 1000; // Standard poll when connecting/rescued
+            }
+            if (interval !== newInterval) {
+                interval = newInterval;
+                if (running) {
+                    restart();
+                }
+            }
+        }
     }
 
     // Main QML View
@@ -344,10 +427,10 @@ PlasmoidItem {
                 // Rescue Button
                 PlasmaComponents.Button {
                     Layout.fillWidth: true
-                    text: "Rescue Connection"
+                    text: root.status === "ONLINE" ? "Force Rescue (Troubleshoot)" : "Rescue Connection"
                     icon.name: "network-wired"
-                    visible: root.status === "PORTAL_DETECTED" || root.status === "OFFLINE"
-                    enabled: !root.isRefreshing && root.status !== "DISCONNECTED"
+                    visible: root.rescueStatus !== "RESCUED" && root.status !== "DISCONNECTED"
+                    enabled: !root.isRefreshing
                     onClicked: root.rescue()
                 }
 

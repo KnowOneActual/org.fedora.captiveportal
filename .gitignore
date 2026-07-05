@@ -12,3 +12,10 @@ __pycache__/
 
 # Packages
 *.plasmoid
+
+# Editor swap files
+.*.kate-swp
+*.kate-swp
+
+# Tooling
+.slopless/

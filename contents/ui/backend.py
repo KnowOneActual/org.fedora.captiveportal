@@ -6,37 +6,32 @@ import sys
 import argparse
 import urllib.request
 import urllib.parse
+import os
 from pathlib import Path
 
 SCRIPT_PATH = "/home/user/github/captive-portal-rescue/captive-portal-rescue.sh"
 
 def detect_vpn_interfaces():
     try:
-        res = subprocess.run(["ip", "-o", "link", "show"], capture_output=True, text=True, errors="replace", check=True)
         interfaces = []
-        for line in res.stdout.splitlines():
-            parts = line.split(": ")
-            if len(parts) >= 2:
-                name = parts[1].strip()
-                if any(vpn_prefix in name for vpn_prefix in ["tailscale", "tun", "wg", "mullvad", "cscotun", "fortissl"]):
-                    interfaces.append(name)
+        for name in os.listdir("/sys/class/net"):
+            if any(vpn_prefix in name for vpn_prefix in ["tailscale", "tun", "wg", "mullvad", "cscotun", "fortissl"]):
+                interfaces.append(name)
         return interfaces
     except Exception:
         return []
 
 def get_active_wifi():
     try:
-        # Get active UUID and device name
-        res = subprocess.run(["nmcli", "-t", "-f", "UUID,TYPE,DEVICE,ACTIVE", "connection", "show", "--active"], capture_output=True, text=True, errors="replace", check=True)
+        # Get active connection details in a single nmcli run
+        res = subprocess.run(["nmcli", "-t", "-f", "NAME,UUID,TYPE,DEVICE,ACTIVE", "connection", "show", "--active"], capture_output=True, text=True, errors="replace", check=True)
         for line in res.stdout.splitlines():
             parts = line.strip().split(":")
-            if len(parts) >= 4:
-                uuid_val, conn_type, dev, active = parts[0], parts[1], parts[2], parts[3]
+            if len(parts) >= 5:
+                name_val, uuid_val, conn_type, dev, active = parts[0], parts[1], parts[2], parts[3], parts[4]
                 if active == "yes" and "wireless" in conn_type.lower():
-                    # Get connection name
-                    name_res = subprocess.run(["nmcli", "-g", "connection.id", "connection", "show", uuid_val], capture_output=True, text=True, errors="replace", check=True)
                     return {
-                        "name": name_res.stdout.strip(),
+                        "name": name_val,
                         "uuid": uuid_val,
                         "interface": dev
                     }
@@ -44,7 +39,18 @@ def get_active_wifi():
         pass
     return None
 
+def check_nm_connectivity():
+    try:
+        res = subprocess.run(["nmcli", "networking", "connectivity"], capture_output=True, text=True, errors="replace", timeout=2)
+        return res.stdout.strip()
+    except Exception:
+        return "unknown"
+
 def check_connectivity(interface=None):
+    nm_status = check_nm_connectivity()
+    if nm_status == "full":
+        return "ONLINE", None
+
     # Setup HTTP header/timeout details
     # If interface is specified, we check if we can bind urllib to it.
     # Note: socket binding in urllib is complex, so we will use curl via subprocess
@@ -85,15 +91,25 @@ def check_connectivity(interface=None):
     except Exception:
         pass
         
+    # If nm_status specifically detected a portal but curl checks failed, report portal redirect as fallback
+    if nm_status == "portal":
+        return "PORTAL_REDIRECTED", "http://neverssl.com"
+        
     return "OFFLINE", None
 
 def get_dns_settings(uuid_val):
     if not uuid_val:
         return "unknown", ""
     try:
-        ignore4 = subprocess.run(["nmcli", "-g", "ipv4.ignore-auto-dns", "connection", "show", uuid_val], capture_output=True, text=True, errors="replace")
-        dns4 = subprocess.run(["nmcli", "-g", "ipv4.dns", "connection", "show", uuid_val], capture_output=True, text=True, errors="replace")
-        return ignore4.stdout.strip(), dns4.stdout.strip()
+        res = subprocess.run(["nmcli", "-f", "ipv4.ignore-auto-dns,ipv4.dns", "-t", "connection", "show", uuid_val], capture_output=True, text=True, errors="replace", check=True)
+        ignore4 = "unknown"
+        dns4 = ""
+        for line in res.stdout.splitlines():
+            if line.startswith("ipv4.ignore-auto-dns:"):
+                ignore4 = line.split(":", 1)[1].strip()
+            elif line.startswith("ipv4.dns:"):
+                dns4 = line.split(":", 1)[1].strip()
+        return ignore4, dns4
     except Exception:
         return "unknown", ""
 

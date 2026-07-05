@@ -17,5 +17,11 @@
 		<entry name="showDetails" type="bool">
 			<default>true</default>
 		</entry>
+		<entry name="autoRescue" type="bool">
+			<default>false</default>
+		</entry>
+		<entry name="autoRestore" type="bool">
+			<default>true</default>
+		</entry>
 	</group>
 </kcfg>

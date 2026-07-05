@@ -13,6 +13,8 @@ Item {
     property alias cfg_checkInterval: checkIntervalSpinBox.value
     property alias cfg_showTitle: showTitleCheckbox.checked
     property alias cfg_showDetails: showDetailsCheckbox.checked
+    property alias cfg_autoRescue: autoRescueCheckbox.checked
+    property alias cfg_autoRestore: autoRestoreCheckbox.checked
 
     Kirigami.FormLayout {
         anchors.left: parent.left
@@ -32,6 +34,17 @@ Item {
         CheckBox {
             id: showDetailsCheckbox
             text: i18n("Show network names & explanations")
+        }
+
+        CheckBox {
+            id: autoRescueCheckbox
+            Kirigami.FormData.label: i18n("Automation:")
+            text: i18n("Automatically rescue connection on captive portals")
+        }
+
+        CheckBox {
+            id: autoRestoreCheckbox
+            text: i18n("Automatically restore settings when online")
         }
 
         CheckBox {
