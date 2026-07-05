@@ -22,4 +22,3 @@ This document outlines the planned future features and improvements for the **Ca
 
 ### 4. Custom portal login scripts
 * **Goal:** Allow users to configure post-rescue commands or login automations for specific networks (like a library or corporate office) that require custom authentication forms.
-<!-- textlint-enable slopless/flesch-kincaid,slopless/gunning-fog,slopless/coleman-liau -->

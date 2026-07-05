@@ -30,4 +30,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Status monitoring for active connection, DNS ignore configurations, and VPN interfaces.
 - Manual trigger buttons for the `captive-portal-rescue.sh` script to perform network rescue and settings restoration.
 - Native system tray compact and expanded representations matching Breeze styling.
-<!-- textlint-enable slopless/flesch-kincaid,slopless/gunning-fog -->
+
