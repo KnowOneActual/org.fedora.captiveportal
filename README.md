@@ -36,7 +36,7 @@ This widget gives you a simple tool to:
 
 ## 💡 Why this exists
 
-I developed this tool to make my own travels easier. Connecting to various public and private networks with custom DNS and active VPNs is a bit of hassle. I wanted a fast, native desktop tool to handle it. Building this widget was also a great way to learn KDE Plasma 6 development and wrap my original CLI tool, [captive-portal-rescue](https://github.com/KnowOneActual/captive-portal-rescue).
+I developed this tool to make my own travels easier. Connecting to various public and private networks with custom DNS and active VPNs is a bit of a hassle. I wanted a fast, native desktop tool to handle it. Building this widget was also a way to learn KDE Plasma 6 development and wrap my original CLI tool, [captive-portal-rescue](https://github.com/KnowOneActual/captive-portal-rescue).
 
 ---
 
