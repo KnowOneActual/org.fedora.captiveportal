@@ -4,7 +4,7 @@
         "Description": "Glanceable tray widget to detect, bypass, and restore DNS configurations on public Wi-Fi captive portals.",
         "Icon": "network-wireless-hotspot",
         "Id": "org.fedora.captiveportal",
-        "Version": "0.2.1",
+        "Version": "0.2.2",
         "Category": "Network",
         "License": "MIT",
         "Authors": [

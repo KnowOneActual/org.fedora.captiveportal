@@ -3,6 +3,7 @@ import subprocess
 import json
 import argparse
 import os
+import shutil
 
 SCRIPT_PATH = "/home/user/github/captive-portal-rescue/captive-portal-rescue.sh"
 
@@ -264,6 +265,108 @@ def run_restore():
         return {"success": False, "stdout": "", "stderr": str(e)}
 
 
+def open_browser_private(url):
+    # 1. Get default browser desktop file
+    try:
+        res = subprocess.run(
+            ["xdg-settings", "get", "default-web-browser"],
+            capture_output=True,
+            text=True,
+            errors="ignore",
+        )
+        browser_app = res.stdout.strip()
+    except Exception:
+        browser_app = ""
+
+    if not browser_app:
+        try:
+            res = subprocess.run(
+                ["xdg-mime", "query", "default", "x-scheme-handler/http"],
+                capture_output=True,
+                text=True,
+                errors="ignore",
+            )
+            browser_app = res.stdout.strip()
+        except Exception:
+            pass
+
+    # Normalize name to lowercase
+    app_lower = browser_app.lower()
+
+    # 2. Determine binary and flag
+    binary = None
+    flag = None
+
+    if "firefox" in app_lower:
+        binary = "firefox"
+        flag = "-private-window"
+    elif "chrome" in app_lower:
+        binary = "google-chrome"
+        flag = "--incognito"
+    elif "chromium" in app_lower:
+        binary = "chromium-browser"
+        flag = "--incognito"
+    elif "brave" in app_lower:
+        binary = "brave-browser"
+        flag = "--incognito"
+    elif "librewolf" in app_lower:
+        binary = "librewolf"
+        flag = "-private-window"
+    elif "edge" in app_lower:
+        binary = "microsoft-edge"
+        flag = "--inprivate"
+    elif "opera" in app_lower:
+        binary = "opera"
+        flag = "--private"
+    elif "epiphany" in app_lower:
+        binary = "epiphany"
+        flag = "--incognito"
+    elif "falkon" in app_lower:
+        binary = "falkon"
+        flag = "--private-browsing"
+
+    # If we couldn't match a known browser, fallback to xdg-open
+    if not binary:
+        try:
+            subprocess.Popen(["xdg-open", url])
+            return True
+        except Exception:
+            return False
+
+    # Check if the binary is in PATH
+    resolved_bin = shutil.which(binary)
+    if not resolved_bin:
+        # Fallbacks for specific common browsers
+        if "chrome" in binary:
+            resolved_bin = shutil.which("chrome")
+        elif "chromium" in binary:
+            resolved_bin = shutil.which("chromium")
+        elif "brave" in binary:
+            resolved_bin = shutil.which("brave")
+
+    if not resolved_bin:
+        resolved_bin = shutil.which(binary.split("-")[0])
+
+    if not resolved_bin:
+        # Final fallback to xdg-open
+        try:
+            subprocess.Popen(["xdg-open", url])
+            return True
+        except Exception:
+            return False
+
+    try:
+        subprocess.Popen([resolved_bin, flag, url])
+        return True
+    except Exception:
+        # Fallback to xdg-open if launch failed
+        try:
+            subprocess.Popen(["xdg-open", url])
+            return True
+        except Exception:
+            return False
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Captive Portal Rescue KDE Backend Wrapper"
@@ -281,10 +384,18 @@ def main():
         "--restore", action="store_true", help="Restore custom connection settings"
     )
     parser.add_argument(
+        "--open-url", type=str, help="Open URL in private/incognito browser mode"
+    )
+    parser.add_argument(
         "--json", action="store_true", help="Force output in JSON format (default)"
     )
 
     args = parser.parse_args()
+
+    if args.open_url:
+        success = open_browser_private(args.open_url)
+        print(json.dumps({"success": success}))
+        return
 
     if args.rescue:
         result = run_rescue()

@@ -169,6 +169,11 @@ PlasmoidItem {
         function runRestore() {
             connectSource("python3 " + scriptPath + " --restore");
         }
+
+        function runOpenUrl(url) {
+            var safeUrl = url.replace(/'/g, "'\\''");
+            connectSource("python3 " + scriptPath + " --open-url '" + safeUrl + "'");
+        }
     }
 
     function refresh(force) {
@@ -193,7 +198,7 @@ PlasmoidItem {
 
     function openLoginPage() {
         var url = root.redirectUrl ? root.redirectUrl : "http://neverssl.com";
-        Qt.openUrlExternally(url);
+        executable.runOpenUrl(url);
     }
 
     function showNotification(message, title, icon) {

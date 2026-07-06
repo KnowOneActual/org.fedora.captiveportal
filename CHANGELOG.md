@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0/0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-07-06
+
+### Added
+- **Private/Incognito Browser Launching**: Changed the "Open Login Page" action to query the default system browser (via `xdg-settings`/`xdg-mime`) and run it in its private/incognito mode (supporting Firefox, Chrome, Chromium, Brave, LibreWolf, Edge, Opera, Falkon, and Epiphany). This prevents captive portal cookies and redirect history from cluttering the user's main browser profile.
+
 ## [0.2.1] - 2026-07-06
 
 ### Added

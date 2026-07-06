@@ -1,7 +1,7 @@
 <!-- textlint-disable slopless/flesch-kincaid -->
 # Captive portal rescue widget for KDE Plasma 6
 
-[![Version](https://img.shields.io/badge/version-0.2.1-green.svg)](https://github.com/KnowOneActual/org.fedora.captiveportal/releases)
+[![Version](https://img.shields.io/badge/version-0.2.2-green.svg)](https://github.com/KnowOneActual/org.fedora.captiveportal/releases)
 [![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6%2B-blue?logo=kde&logoColor=white)](https://kde.org)
 [![Fedora Tested](https://img.shields.io/badge/Fedora-tested-blue?logo=fedora&logoColor=white)](https://fedoraproject.org)
 [![Python 3](https://img.shields.io/badge/Python-3-blue?logo=python&logoColor=white)](https://python.org)
@@ -98,6 +98,9 @@ python3 contents/ui/backend.py --status
 
 # Force raw connection check, bypassing NetworkManager cache
 python3 contents/ui/backend.py --status --force
+
+# Open captive portal page in private/incognito browser mode
+python3 contents/ui/backend.py --open-url "http://neverssl.com"
 
 # Execute captive portal rescue
 python3 contents/ui/backend.py --rescue
