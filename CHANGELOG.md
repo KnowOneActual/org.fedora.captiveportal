@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0/0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-07-06
+
+### Added
+- **Force Raw Network Check:** Clicking the refresh button in the system tray now forces a live HTTP/HTTPS canary check through the specific Wi-Fi interface, bypassing NetworkManager's cached/global connectivity status (useful when a VPN is active but blocking actual internet traffic).
+
+### Fixed
+- **VPN Binding Bug:** Fixed an array slice issue in the backend where the Wi-Fi interface binding (`--interface`) was incorrectly removed from `neverssl.com` curl connectivity checks.
+- **Firefox Canary Binding:** Bound the Firefox portal whitelisting check to the Wi-Fi interface if specified.
+
+### Changed
+- **Code Optimization (Slop Removal):** Deduplicated QML icon and color path calculations into unified properties, reducing duplicate logic in the UI components.
+
 ## [0.2.0] - 2026-07-05
 
 ### Added

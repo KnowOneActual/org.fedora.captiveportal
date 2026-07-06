@@ -27,6 +27,20 @@ PlasmoidItem {
     property string redirectUrl: ""
     property bool isRefreshing: false
 
+    readonly property string currentIcon: {
+        if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
+        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
+        if (root.status === "DISCONNECTED") return "network-disconnect";
+        return "network-wireless-disconnected";
+    }
+
+    readonly property color statusColor: {
+        if (root.status === "ONLINE") return "#67C23A";
+        if (root.status === "PORTAL_DETECTED") return "#E6A23C";
+        if (root.status === "PORTAL_AWAITING_LOGIN") return "#409EFF";
+        return root.mutedTextColor;
+    }
+
     onStatusChanged: refreshTimer.updateInterval()
     onRescueStatusChanged: refreshTimer.updateInterval()
 
@@ -54,12 +68,7 @@ PlasmoidItem {
     readonly property color outlineColor: (root.textColor.r + root.textColor.g + root.textColor.b > 1.5) ? "#a0000000" : "#a0ffffff"
 
     Plasmoid.title: "Captive Portal Rescue"
-    Plasmoid.icon: {
-        if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
-        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
-        if (root.status === "DISCONNECTED") return "network-disconnect";
-        return "network-wireless-disconnected";
-    }
+    Plasmoid.icon: root.currentIcon
 
     Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
     preferredRepresentation: inPanel ? compactRepresentation : fullRepresentation
@@ -144,38 +153,28 @@ PlasmoidItem {
             root.isRefreshing = false;
         }
 
-        function runStatus() {
-            var scriptPath = Qt.resolvedUrl("backend.py").toString();
-            if (scriptPath.indexOf("file://") === 0) {
-                scriptPath = scriptPath.substring(7);
-            }
-            var cmd = "python3 " + scriptPath + " --status";
-            connectSource(cmd);
+        readonly property string scriptPath: {
+            var path = Qt.resolvedUrl("backend.py").toString();
+            return path.indexOf("file://") === 0 ? path.substring(7) : path;
+        }
+
+        function runStatus(force) {
+            connectSource("python3 " + scriptPath + " --status" + (force ? " --force" : ""));
         }
 
         function runRescue() {
-            var scriptPath = Qt.resolvedUrl("backend.py").toString();
-            if (scriptPath.indexOf("file://") === 0) {
-                scriptPath = scriptPath.substring(7);
-            }
-            var cmd = "python3 " + scriptPath + " --rescue";
-            connectSource(cmd);
+            connectSource("python3 " + scriptPath + " --rescue");
         }
 
         function runRestore() {
-            var scriptPath = Qt.resolvedUrl("backend.py").toString();
-            if (scriptPath.indexOf("file://") === 0) {
-                scriptPath = scriptPath.substring(7);
-            }
-            var cmd = "python3 " + scriptPath + " --restore";
-            connectSource(cmd);
+            connectSource("python3 " + scriptPath + " --restore");
         }
     }
 
-    function refresh() {
+    function refresh(force) {
         if (root.isRefreshing) return;
         root.isRefreshing = true;
-        executable.runStatus();
+        executable.runStatus(!!force);
     }
 
     function rescue() {
@@ -250,20 +249,10 @@ PlasmoidItem {
                 spacing: Kirigami.Units.smallSpacing
 
                 Kirigami.Icon {
-                    source: {
-                        if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
-                        if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
-                        if (root.status === "DISCONNECTED") return "network-disconnect";
-                        return "network-wireless-disconnected";
-                    }
+                    source: root.currentIcon
                     implicitWidth: Kirigami.Units.iconSizes.smallMedium
                     implicitHeight: Kirigami.Units.iconSizes.smallMedium
-                    color: {
-                        if (root.status === "ONLINE") return "#67C23A";
-                        if (root.status === "PORTAL_DETECTED") return "#E6A23C";
-                        if (root.status === "PORTAL_AWAITING_LOGIN") return "#409EFF";
-                        return root.mutedTextColor;
-                    }
+                    color: root.statusColor
                 }
 
                 PlasmaComponents.Label {
@@ -309,7 +298,7 @@ PlasmoidItem {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.refresh()
+                        onClicked: root.refresh(true)
                     }
                 }
             }
@@ -468,18 +457,8 @@ PlasmoidItem {
             anchors.centerIn: parent
             width: Math.min(parent.width, parent.height) - Kirigami.Units.smallSpacing
             height: width
-            source: {
-                if (root.status === "ONLINE") return (root.rescueStatus === "RESCUED" ? "network-vpn" : "network-wired-activated");
-                if (root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN") return "network-wireless-hotspot";
-                if (root.status === "DISCONNECTED") return "network-disconnect";
-                return "network-wireless-disconnected";
-            }
-            color: {
-                if (root.status === "ONLINE") return "#67C23A";
-                if (root.status === "PORTAL_DETECTED") return "#E6A23C";
-                if (root.status === "PORTAL_AWAITING_LOGIN") return "#409EFF";
-                return root.mutedTextColor;
-            }
+            source: root.currentIcon
+            color: root.statusColor
         }
     }
 }

@@ -46,9 +46,9 @@ def check_nm_connectivity():
     except Exception:
         return "unknown"
 
-def check_connectivity(interface=None):
+def check_connectivity(interface=None, force=False):
     nm_status = check_nm_connectivity()
-    if nm_status == "full":
+    if not force and nm_status == "full":
         return "ONLINE", None
 
     # Setup HTTP header/timeout details
@@ -71,7 +71,7 @@ def check_connectivity(interface=None):
     try:
         # Check HTTP neverssl.com redirect
         # We want to capture redirect URL and HTTP status code
-        http_res = subprocess.run(curl_base[:-2] + ["-w", "%{http_code}\\n%{redirect_url}", "http://neverssl.com"], capture_output=True, text=True, errors="replace")
+        http_res = subprocess.run(curl_base + ["-w", "%{http_code}\\n%{redirect_url}", "http://neverssl.com"], capture_output=True, text=True, errors="replace")
         if http_res.returncode == 0:
             lines = http_res.stdout.strip().splitlines()
             code = lines[0].strip() if len(lines) > 0 else ""
@@ -82,7 +82,10 @@ def check_connectivity(interface=None):
                 
             # If 200, check Firefox portal canary
             if code == "200":
-                firefox_res = subprocess.run(["curl", "-4", "-s", "--connect-timeout", "3", "http://detectportal.firefox.com/success.txt"], capture_output=True, text=True, errors="replace")
+                firefox_cmd = ["curl", "-4", "-s", "--connect-timeout", "3"]
+                if interface:
+                    firefox_cmd += ["--interface", interface]
+                firefox_res = subprocess.run(firefox_cmd + ["http://detectportal.firefox.com/success.txt"], capture_output=True, text=True, errors="replace")
                 if "success" in firefox_res.stdout.strip():
                     return "PORTAL_WHITELISTED", None
                 else:
@@ -113,7 +116,7 @@ def get_dns_settings(uuid_val):
     except Exception:
         return "unknown", ""
 
-def get_status():
+def get_status(force=False):
     wifi = get_active_wifi()
     vpn_ifs = detect_vpn_interfaces()
     
@@ -138,7 +141,7 @@ def get_status():
     is_rescued = (ignore4 == "yes" and dns4 != "")
     rescue_status = "RESCUED" if is_rescued else "NORMAL"
     
-    connectivity, redirect_url = check_connectivity(wifi["interface"])
+    connectivity, redirect_url = check_connectivity(wifi["interface"], force=force)
     
     # Map overall status
     if connectivity == "ONLINE":
@@ -199,6 +202,7 @@ def run_restore():
 def main():
     parser = argparse.ArgumentParser(description="Captive Portal Rescue KDE Backend Wrapper")
     parser.add_argument("--status", action="store_true", help="Get current connection status in JSON")
+    parser.add_argument("--force", action="store_true", help="Force connectivity check, bypassing cache")
     parser.add_argument("--rescue", action="store_true", help="Execute captive portal rescue flow")
     parser.add_argument("--restore", action="store_true", help="Restore custom connection settings")
     parser.add_argument("--json", action="store_true", help="Force output in JSON format (default)")
@@ -208,18 +212,18 @@ def main():
     if args.rescue:
         result = run_rescue()
         # After rescue, fetch and return updated status
-        status = get_status()
+        status = get_status(force=args.force)
         status["action_result"] = result
         print(json.dumps(status))
     elif args.restore:
         result = run_restore()
         # After restore, fetch and return updated status
-        status = get_status()
+        status = get_status(force=args.force)
         status["action_result"] = result
         print(json.dumps(status))
     else:
         # Default is --status
-        status = get_status()
+        status = get_status(force=args.force)
         print(json.dumps(status))
 
 if __name__ == "__main__":
