@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0/0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-07-07
+
+### Added
+- **Explicit Check Connection Button**: Added a dedicated "Check Connection" button at the bottom of the actions panel in the widget to allow users to manually re-probe status.
+- **Auto-open private portal page on rescue**: If rescue is successful, the widget automatically launches the portal login page in private/incognito mode.
+
+### Fixed
+- **Bypassed NetworkManager Caching**: Bypassed NetworkManager's cached/global connectivity status to ensure the widget never incorrectly reports "Connected to Internet" when behind a portal.
+- **Flatpak browser private mode**: Supported launching Flatpak-installed browsers (Firefox, Chrome, Brave, etc.) in private/incognito mode.
+- **Open Login Page visibility**: Enabled the "Open Login Page" button to be visible whenever a captive portal is detected (`PORTAL_DETECTED`).
+
 ## [0.2.2] - 2026-07-06
 
 ### Added

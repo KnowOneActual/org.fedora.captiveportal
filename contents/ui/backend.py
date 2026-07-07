@@ -80,8 +80,10 @@ def check_nm_connectivity():
 
 def check_connectivity(interface=None, force=False):
     nm_status = check_nm_connectivity()
-    if not force and nm_status == "full":
-        return "ONLINE", None
+    if nm_status == "none":
+        return "OFFLINE", None
+    if nm_status == "portal":
+        return "PORTAL_REDIRECTED", "http://neverssl.com"
 
     # Setup HTTP header/timeout details
     # If interface is specified, we check if we can bind urllib to it.
@@ -141,10 +143,6 @@ def check_connectivity(interface=None, force=False):
                     return "PORTAL_REDIRECTED", "http://neverssl.com"
     except Exception:
         pass
-
-    # If nm_status specifically detected a portal but curl checks failed, report portal redirect as fallback
-    if nm_status == "portal":
-        return "PORTAL_REDIRECTED", "http://neverssl.com"
 
     return "OFFLINE", None
 
@@ -234,9 +232,9 @@ def get_status(force=False):
 
 def run_rescue():
     try:
-        # Run the rescue shell script
+        # Run the rescue shell script with --no-open to prevent spawning standard browser
         res = subprocess.run(
-            ["bash", SCRIPT_PATH], capture_output=True, text=True, errors="replace"
+            ["bash", SCRIPT_PATH, "--no-open"], capture_output=True, text=True, errors="replace"
         )
         return {
             "success": res.returncode == 0,
@@ -293,6 +291,13 @@ def open_browser_private(url):
     # Normalize name to lowercase
     app_lower = browser_app.lower()
 
+    # Get flatpak ID if it exists
+    flatpak_id = None
+    if browser_app.endswith(".desktop"):
+        potential_id = browser_app[:-8]
+        if potential_id.count(".") >= 2:
+            flatpak_id = potential_id
+
     # 2. Determine binary and flag
     binary = None
     flag = None
@@ -300,30 +305,48 @@ def open_browser_private(url):
     if "firefox" in app_lower:
         binary = "firefox"
         flag = "-private-window"
+        if not flatpak_id:
+            flatpak_id = "org.mozilla.firefox"
     elif "chrome" in app_lower:
         binary = "google-chrome"
         flag = "--incognito"
+        if not flatpak_id:
+            flatpak_id = "com.google.Chrome"
     elif "chromium" in app_lower:
         binary = "chromium-browser"
         flag = "--incognito"
+        if not flatpak_id:
+            flatpak_id = "org.chromium.Chromium"
     elif "brave" in app_lower:
         binary = "brave-browser"
         flag = "--incognito"
+        if not flatpak_id:
+            flatpak_id = "com.brave.Browser"
     elif "librewolf" in app_lower:
         binary = "librewolf"
         flag = "-private-window"
+        if not flatpak_id:
+            flatpak_id = "io.gitlab.librewolf-community"
     elif "edge" in app_lower:
         binary = "microsoft-edge"
         flag = "--inprivate"
+        if not flatpak_id:
+            flatpak_id = "com.microsoft.Edge"
     elif "opera" in app_lower:
         binary = "opera"
         flag = "--private"
+        if not flatpak_id:
+            flatpak_id = "com.opera.Opera"
     elif "epiphany" in app_lower:
         binary = "epiphany"
         flag = "--incognito"
+        if not flatpak_id:
+            flatpak_id = "org.gnome.Epiphany"
     elif "falkon" in app_lower:
         binary = "falkon"
         flag = "--private-browsing"
+        if not flatpak_id:
+            flatpak_id = "org.kde.falkon"
 
     # If we couldn't match a known browser, fallback to xdg-open
     if not binary:
@@ -332,6 +355,22 @@ def open_browser_private(url):
             return True
         except Exception:
             return False
+
+    # Check if Flatpak is installed and the app exists as Flatpak
+    flatpak_bin = shutil.which("flatpak")
+    if flatpak_bin and flatpak_id:
+        try:
+            check_res = subprocess.run(
+                ["flatpak", "info", flatpak_id],
+                capture_output=True,
+                text=True,
+                errors="ignore"
+            )
+            if check_res.returncode == 0:
+                subprocess.Popen(["flatpak", "run", flatpak_id, flag, url])
+                return True
+        except Exception:
+            pass
 
     # Check if the binary is in PATH
     resolved_bin = shutil.which(binary)
@@ -347,24 +386,19 @@ def open_browser_private(url):
     if not resolved_bin:
         resolved_bin = shutil.which(binary.split("-")[0])
 
-    if not resolved_bin:
-        # Final fallback to xdg-open
+    if resolved_bin:
         try:
-            subprocess.Popen(["xdg-open", url])
+            subprocess.Popen([resolved_bin, flag, url])
             return True
         except Exception:
-            return False
+            pass
 
+    # Final fallback to xdg-open
     try:
-        subprocess.Popen([resolved_bin, flag, url])
+        subprocess.Popen(["xdg-open", url])
         return True
     except Exception:
-        # Fallback to xdg-open if launch failed
-        try:
-            subprocess.Popen(["xdg-open", url])
-            return True
-        except Exception:
-            return False
+        return False
 
 
 def main():
@@ -402,6 +436,12 @@ def main():
         # After rescue, fetch and return updated status
         status = get_status(force=args.force)
         status["action_result"] = result
+        
+        # Automatically open portal login page in private/incognito mode if rescued
+        if result.get("success") and status.get("status") in ["PORTAL_DETECTED", "PORTAL_AWAITING_LOGIN", "OFFLINE"]:
+            url = status.get("redirect_url") or "http://neverssl.com"
+            open_browser_private(url)
+            
         print(json.dumps(status))
     elif args.restore:
         result = run_restore()

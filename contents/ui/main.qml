@@ -433,7 +433,7 @@ PlasmoidItem {
                     Layout.fillWidth: true
                     text: "Open Login Page"
                     icon.name: "internet-services"
-                    visible: root.status === "PORTAL_AWAITING_LOGIN"
+                    visible: root.status === "PORTAL_DETECTED" || root.status === "PORTAL_AWAITING_LOGIN"
                     enabled: !root.isRefreshing
                     onClicked: root.openLoginPage()
                 }
@@ -446,6 +446,15 @@ PlasmoidItem {
                     visible: root.rescueStatus === "RESCUED"
                     enabled: !root.isRefreshing
                     onClicked: root.restore()
+                }
+
+                // Check Connection Button
+                PlasmaComponents.Button {
+                    Layout.fillWidth: true
+                    text: "Check Connection"
+                    icon.name: "view-refresh"
+                    enabled: !root.isRefreshing
+                    onClicked: root.refresh(true)
                 }
             }
         }
